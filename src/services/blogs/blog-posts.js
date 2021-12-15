@@ -1,17 +1,17 @@
 import express from "express";
-import BlogPost from "../../db/modals/blogPostsModal/BlogPost.js";
 import q2m from "query-to-mongo";
 import mongoose from "mongoose";
-const { Router } = express;
 
-import { authMiddleware } from "../../auth/user.js";
+import BlogPost from "../../db/modals/blogPostsModal/BlogPost.js";
+import { JWTAuthMiddleware } from "../../auth/auth-user.js";
+
+const { Router } = express;
 
 const router = Router();
 
-//Blog Posts routes
 router
   .route("/")
-  .get(authMiddleware, async (req, res) => {
+  .get(JWTAuthMiddleware, async (req, res) => {
     try {
       const mongoQuery = q2m(req.query);
 
@@ -32,7 +32,7 @@ router
       res.status(404).send({ success: false, errorr: error.message });
     }
   })
-  .post(authMiddleware, async (req, res) => {
+  .post(JWTAuthMiddleware, async (req, res) => {
     try {
       if (req.user._id.toString() === req.body.user) {
         const newBlogPost = new BlogPost(req.body);
@@ -50,7 +50,7 @@ router
 
 router
   .route("/:blogId")
-  .get(authMiddleware, async (req, res) => {
+  .get(JWTAuthMiddleware, async (req, res) => {
     try {
       const getBlogPostById = await BlogPost.findById(req.params.blogId);
 
@@ -59,7 +59,7 @@ router
       res.status(404).send({ success: false, errorr: error.message });
     }
   })
-  .put(authMiddleware, async (req, res) => {
+  .put(JWTAuthMiddleware, async (req, res) => {
     try {
       if (req.user._id.toString() === req.body.user) {
         const updateBlogPostById = await BlogPost.findByIdAndUpdate(
@@ -76,7 +76,7 @@ router
       res.status(404).send({ success: false, errorr: error.message });
     }
   })
-  .delete(authMiddleware, async (req, res) => {
+  .delete(JWTAuthMiddleware, async (req, res) => {
     try {
       const updateBlogPostById = await BlogPost.findByIdAndDelete(
         req.params.blogId
@@ -92,7 +92,7 @@ router
     }
   });
 
-router.route("/me/articles").get(authMiddleware, async (req, res) => {
+router.route("/me/articles").get(JWTAuthMiddleware, async (req, res) => {
   try {
     const myArticles = await BlogPost.find({ user: req.user._id.toString() });
     if (myArticles.length > 0) {
