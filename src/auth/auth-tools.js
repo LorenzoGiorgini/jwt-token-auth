@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import UsersSchema from "../db/modals/usersModal/users.js";
 
 export const JWTauth = async (user) => {
-  // 1. given the user generates token
+  
   const accessToken = await generateJWTToken({ _id: user._id });
   const refreshToken = await generateRefreshJWTToken({ _id: user._id });
 

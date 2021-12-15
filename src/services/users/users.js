@@ -13,11 +13,14 @@ router.route("/").get(JWTAuthMiddleware, async (req, res) => {
 
     if (allUsers) {
       res.status(200).send({ success: true, data: allUsers });
+
     } else {
       res.status(404).send({ success: false, message: "No Users Found" });
+
     }
   } catch (error) {
     res.status(400).send({ success: false, error: error.message });
+
   }
 });
 
@@ -26,22 +29,41 @@ router
   .get(JWTAuthMiddleware, async (req, res) => {
     try {
       res.status(200).send({ success: true, data: req.user });
+
     } catch (error) {
       res.status(404).send({ success: false, error: error.message });
+
     }
   })
   .put(JWTAuthMiddleware, async (req, res) => {
     try {
+      const _obj = {
+        name: req.body.name,
+        surname: req.body.surname,
+        email: req.body.email,
+        password: req.body.password
+      }
+
+      const user = await req.user.update(_obj);
+      
+      await req.user.save();
+
+      res.status(203).send({ success: true, data: user });
+
     } catch (error) {
       res.status(404).send({ success: false, error: error.message });
+
     }
   })
   .delete(JWTAuthMiddleware, async (req, res) => {
     try {
       await req.user.deleteOne();
+
       res.status(204).send({ success: true, message: "User Deleted" });
+
     } catch (error) {
       res.status(404).send({ success: false, error: error.message });
+
     }
   });
 

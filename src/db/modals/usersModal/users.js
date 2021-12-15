@@ -22,7 +22,9 @@ UsersSchema.pre("save", async function (next) {
 
   const password = newUser.password;
 
+
   if (newUser.isModified("password")) {
+    
     const hash = await bcrypt.hash(password, 10);
 
     newUser.password = hash;
@@ -30,7 +32,7 @@ UsersSchema.pre("save", async function (next) {
   next();
 });
 
-// this function is called automatically by express EVERY TIME it does res.send()
+
 UsersSchema.methods.toJSON = function () {
   const userDocument = this;
 
