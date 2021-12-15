@@ -1,9 +1,16 @@
 import jwt from "jsonwebtoken";
+import UsersSchema from "../db/modals/usersModal/users.js";
 
 export const JWTauth = async (user) => {
   // 1. given the user generates token
   const accessToken = await generateJWTToken({ _id: user._id });
-  return accessToken;
+  const refreshToken = await generateRefreshJWTToken({ _id: user._id });
+
+  user.refreshToken = refreshToken;
+
+  await user.save();
+
+  return { accessToken, refreshToken };
 };
 
 const generateJWTToken = (payload) =>
@@ -24,7 +31,7 @@ const generateRefreshJWTToken = (payload) =>
     jwt.sign(
       payload,
       process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "1w" },
+      { expiresIn: "1 week" },
       (err, token) => {
         if (err) reject(err);
         else resolve(token);
@@ -47,3 +54,20 @@ export const verifyRefreshJWT = (token) =>
       else resolve(decodedToken);
     })
   );
+
+export const verifyRefreshToken = async (currentRefreshToken) => {
+
+  const decodedRefreshToken = await verifyRefreshJWT(currentRefreshToken);
+
+  const user = await UsersSchema.findById(decodedRefreshToken._id);
+
+  if (!user) throw new Error("User not found!");
+
+  if (user.refreshToken && user.refreshToken === currentRefreshToken) {
+    const { accessToken, refreshToken } = await JWTauth(user);
+
+    return { accessToken, refreshToken };
+  } else {
+    throw new Error("Token not valid!");
+  }
+};

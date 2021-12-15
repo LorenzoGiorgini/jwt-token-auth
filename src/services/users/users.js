@@ -1,7 +1,7 @@
 import express from "express";
 import UsersModel from "../../db/modals/usersModal/users.js";
 import { JWTAuthMiddleware } from "../../auth/auth-user.js";
-import { JWTauth } from "../../auth/auth-tools.js";
+import { JWTauth, verifyRefreshToken } from "../../auth/auth-tools.js";
 
 const { Router } = express;
 
@@ -45,7 +45,7 @@ router
     }
   });
 
-router.route("/login").post(JWTAuthMiddleware, async (req, res) => {
+router.route("/login").post(async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -53,7 +53,7 @@ router.route("/login").post(JWTAuthMiddleware, async (req, res) => {
 
     if (user) {
       const token = await JWTauth(user);
-      
+
       res.status(200).send({ success: true, token });
     } else {
       res
@@ -67,12 +67,12 @@ router.route("/login").post(JWTAuthMiddleware, async (req, res) => {
 
 router.route("/register").post(async (req, res) => {
   try {
-    console.log(req.body);
     const createUser = new UsersModel(req.body);
+
     if (createUser) {
       await createUser.save();
 
-      const token = await JWTauth(createUser)
+      const token = await JWTauth(createUser);
 
       res.status(201).send({ success: true, user: createUser._id, token });
     } else {
@@ -86,6 +86,22 @@ router.route("/register").post(async (req, res) => {
   }
 });
 
+router.route("/refreshToken").post(async (req, res) => {
+  try {
+    const { currentRefreshToken } = req.body;
+    
+
+    const { accessToken, refreshToken } = await verifyRefreshToken(
+      currentRefreshToken
+    );
+
+ 
+
+    res.status(200).send({ success: true, accessToken, refreshToken });
+  } catch (error) {
+    res.status(404).send({ success: false, error: error.message });
+  }
+});
 
 
 export default router;

@@ -9,7 +9,8 @@ const UsersSchema = new Schema(
     surname: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    role: {type: String, default: 'user', enum: ['admin', 'user']}
+    role: {type: String, default: 'user', enum: ['admin', 'user']},
+    refreshToken: { type: String }
   },
   {
     timestamps: true,
