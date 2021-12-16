@@ -86,9 +86,21 @@ router.route("/register").post(async (req, res) => {
     if (createUser) {
       await createUser.save();
 
-      const token = await JWTauth(createUser);
+      const { accessToken, refreshToken } = await JWTauth(createUser);
 
-      res.status(201).send({ success: true, user: createUser._id, token });
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production" ? true : false,
+        sameSite: "lax",
+      });
+  
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production" ? true : false,
+        sameSite: "lax",
+      });
+
+      res.status(201).send({ success: true, user: createUser._id });
     } else {
       res.status(400).send({
         success: false,
@@ -108,7 +120,17 @@ router.route("/refreshToken").post(async (req, res) => {
       currentRefreshToken
     );
 
-    res.status(200).send({ success: true, accessToken, refreshToken });
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" ? true : false,
+      sameSite: "lax",
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" ? true : false,
+      sameSite: "lax",
+    });
   } catch (error) {
     res.status(404).send({ success: false, error: error.message });
   }
@@ -119,28 +141,27 @@ router
   .get(passport.authenticate("google", { scope: ["profile", "email"] }));
 
 router
-  .route("/googleCallback")
+  .route("/googleRedirect")
   .get(passport.authenticate("google"), async (req, res) => {
     try {
-
+      console.log(req.user)
+      console.log("here")
       res.cookie("accessToken", req.user.tokens.accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production" ? true : false,
-        sameSite: "lax", 
-      })
+        sameSite: "lax",
+      });
 
       res.cookie("refreshToken", req.user.tokens.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production" ? true : false,
         sameSite: "lax",
-      })
+      });
 
-      res.redirect(`${process.env.FE_URL}`)
-
+      res.redirect(`${process.env.FE_URL}`);
     } catch (error) {
       res.status(404).send({ success: false, error: error.message });
     }
   });
-
 
 export default router;
