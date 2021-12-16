@@ -122,10 +122,23 @@ router
   .route("/googleCallback")
   .get(passport.authenticate("google"), async (req, res) => {
     try {
-      console.log(req.user)
+
+      res.cookie("accessToken", req.user.tokens.accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production" ? true : false,
+        sameSite: "lax", 
+      })
+
+      res.cookie("refreshToken", req.user.tokens.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production" ? true : false,
+        sameSite: "lax",
+      })
+
+      res.redirect(`${process.env.FE_URL}`)
 
     } catch (error) {
-
+      res.status(404).send({ success: false, error: error.message });
     }
   });
 
