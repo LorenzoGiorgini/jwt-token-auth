@@ -2,6 +2,7 @@ import express from "express";
 import UsersModel from "../../db/modals/usersModal/users.js";
 import { JWTAuthMiddleware } from "../../auth/auth-user.js";
 import { JWTauth, verifyRefreshToken } from "../../auth/auth-tools.js";
+import passport from "passport";
 
 const { Router } = express;
 
@@ -13,14 +14,11 @@ router.route("/").get(JWTAuthMiddleware, async (req, res) => {
 
     if (allUsers) {
       res.status(200).send({ success: true, data: allUsers });
-
     } else {
       res.status(404).send({ success: false, message: "No Users Found" });
-
     }
   } catch (error) {
     res.status(400).send({ success: false, error: error.message });
-
   }
 });
 
@@ -29,10 +27,8 @@ router
   .get(JWTAuthMiddleware, async (req, res) => {
     try {
       res.status(200).send({ success: true, data: req.user });
-
     } catch (error) {
       res.status(404).send({ success: false, error: error.message });
-
     }
   })
   .put(JWTAuthMiddleware, async (req, res) => {
@@ -41,18 +37,16 @@ router
         name: req.body.name,
         surname: req.body.surname,
         email: req.body.email,
-        password: req.body.password
-      }
+        password: req.body.password,
+      };
 
       const user = await req.user.update(_obj);
-      
+
       await req.user.save();
 
       res.status(203).send({ success: true, data: user });
-
     } catch (error) {
       res.status(404).send({ success: false, error: error.message });
-
     }
   })
   .delete(JWTAuthMiddleware, async (req, res) => {
@@ -60,10 +54,8 @@ router
       await req.user.deleteOne();
 
       res.status(204).send({ success: true, message: "User Deleted" });
-
     } catch (error) {
       res.status(404).send({ success: false, error: error.message });
-
     }
   });
 
@@ -111,19 +103,31 @@ router.route("/register").post(async (req, res) => {
 router.route("/refreshToken").post(async (req, res) => {
   try {
     const { currentRefreshToken } = req.body;
-    
 
     const { accessToken, refreshToken } = await verifyRefreshToken(
       currentRefreshToken
     );
-
- 
 
     res.status(200).send({ success: true, accessToken, refreshToken });
   } catch (error) {
     res.status(404).send({ success: false, error: error.message });
   }
 });
+
+router
+  .route("/googleLogin")
+  .get(passport.authenticate("google", { scope: ["profile", "email"] }));
+
+router
+  .route("/googleCallback")
+  .get(passport.authenticate("google"), async (req, res) => {
+    try {
+      console.log(req.user)
+
+    } catch (error) {
+
+    }
+  });
 
 
 export default router;
