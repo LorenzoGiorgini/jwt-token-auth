@@ -144,8 +144,7 @@ router
   .route("/googleRedirect")
   .get(passport.authenticate("google"), async (req, res) => {
     try {
-      console.log(req.user)
-      console.log("here")
+
       res.cookie("accessToken", req.user.tokens.accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production" ? true : false,
